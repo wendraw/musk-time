@@ -2,32 +2,32 @@ import { EisenhowerQuadrant } from './types';
 
 export const QUADRANT_CONFIG = {
   [EisenhowerQuadrant.DO]: {
-    label: 'Do First',
+    label: 'DO FIRST',
     description: 'Important & Urgent',
-    color: 'bg-red-100 text-red-700 border-red-200',
-    indicator: 'bg-red-500',
-    hover: 'hover:bg-red-50'
+    color: 'bg-[#FF9AA2] text-black border-black', // Salmon Pink
+    indicator: 'bg-black',
+    hover: 'hover:bg-[#FFB7B2]'
   },
   [EisenhowerQuadrant.SCHEDULE]: {
-    label: 'Schedule',
+    label: 'SCHEDULE',
     description: 'Important, Not Urgent',
-    color: 'bg-blue-100 text-blue-700 border-blue-200',
-    indicator: 'bg-blue-500',
-    hover: 'hover:bg-blue-50'
+    color: 'bg-[#85E3FF] text-black border-black', // Sky Blue
+    indicator: 'bg-black',
+    hover: 'hover:bg-[#ACE7FF]'
   },
   [EisenhowerQuadrant.DELEGATE]: {
-    label: 'Delegate',
+    label: 'DELEGATE',
     description: 'Not Important, Urgent',
-    color: 'bg-amber-100 text-amber-700 border-amber-200',
-    indicator: 'bg-amber-500',
-    hover: 'hover:bg-amber-50'
+    color: 'bg-[#B5EAD7] text-black border-black', // Mint Green
+    indicator: 'bg-black',
+    hover: 'hover:bg-[#C7F9E5]'
   },
   [EisenhowerQuadrant.DELETE]: {
-    label: 'Eliminate',
+    label: 'ELIMINATE',
     description: 'Neither',
-    color: 'bg-slate-100 text-slate-700 border-slate-200',
-    indicator: 'bg-slate-400',
-    hover: 'hover:bg-slate-50'
+    color: 'bg-[#E2F0CB] text-black border-black', // Light Lime/Grey
+    indicator: 'bg-black',
+    hover: 'hover:bg-[#F0F8E2]'
   }
 };
 

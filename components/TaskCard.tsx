@@ -1,7 +1,7 @@
 import React from 'react';
 import { Task, EisenhowerQuadrant } from '../types';
 import { QUADRANT_CONFIG } from '../constants';
-import { CheckCircle2, Circle, Clock, Trash2, CalendarPlus } from 'lucide-react';
+import { Check, Clock, Trash2, CalendarPlus, Square, X } from 'lucide-react';
 import { cn } from '../utils';
 
 interface TaskCardProps {
@@ -26,73 +26,95 @@ const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <div 
       className={cn(
-        "group relative flex items-start p-3 mb-2 rounded-lg border transition-all duration-200 bg-white",
-        isSelected ? "ring-2 ring-indigo-500 border-indigo-500 shadow-md transform scale-[1.02]" : "border-slate-200 hover:shadow-sm",
-        task.completed && "opacity-60 bg-slate-50",
-        config.hover
+        "group relative flex flex-col p-3 mb-3 border-2 border-black transition-all duration-100",
+        isSelected 
+          ? "bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] translate-x-[2px] translate-y-[2px]" 
+          : "bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
+        task.completed && "opacity-60 bg-gray-100"
       )}
     >
-      {/* Priority Indicator Line */}
-      <div className={cn("absolute left-0 top-0 bottom-0 w-1 rounded-l-lg", config.indicator)} />
-
-      {/* Completion Toggle */}
-      <button 
-        onClick={(e) => { e.stopPropagation(); onToggleComplete(task.id); }}
-        className="ml-2 mr-3 mt-0.5 text-slate-400 hover:text-green-500 transition-colors flex-shrink-0"
-      >
-        {task.completed ? <CheckCircle2 className="w-5 h-5 text-green-500" /> : <Circle className="w-5 h-5" />}
-      </button>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0 mr-1">
-        <h3 className={cn(
-          "text-sm font-medium leading-snug break-words",
-          task.completed ? "line-through text-slate-500" : "text-slate-800"
-        )}>
-          {task.title}
-        </h3>
-        
-        <div className="flex flex-wrap items-center gap-2 mt-1.5">
-          <span className={cn("text-[10px] px-1.5 py-0.5 rounded border bg-opacity-50 font-medium", config.color)}>
-            {config.label}
-          </span>
-          <span className="flex items-center text-[10px] text-slate-400">
-            <Clock className="w-3 h-3 mr-1" />
-            {task.durationMinutes}m
-          </span>
-          {isScheduled && (
-             <span className="text-[10px] text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded font-medium">
-               Scheduled
-             </span>
+      <div className="flex items-start justify-between gap-3">
+         {/* Checkbox */}
+        <button 
+          onClick={(e) => { e.stopPropagation(); onToggleComplete(task.id); }}
+          className={cn(
+            "w-6 h-6 border-2 border-black flex items-center justify-center flex-shrink-0 transition-colors mt-0.5",
+            task.completed ? "bg-black text-white" : "bg-white hover:bg-gray-50",
+            isSelected && !task.completed && "border-white"
           )}
+          title={task.completed ? "Mark as incomplete" : "Mark as complete"}
+        >
+          {task.completed && <Check className="w-4 h-4" strokeWidth={4} />}
+        </button>
+
+        <div className="flex-1 min-w-0 flex flex-col gap-1">
+          <h3 className={cn(
+            "font-bold text-sm leading-tight break-words whitespace-pre-wrap",
+            task.completed && "line-through decoration-2"
+          )}>
+            {task.title}
+          </h3>
+          
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            {/* Tag retains color even when selected to show importance */}
+            <span className={cn(
+              "text-[10px] font-black uppercase px-1.5 py-0.5 border border-black",
+              config.color,
+              // If card is black (selected), ensure tag has white border to pop
+              isSelected ? "border-white" : ""
+            )}>
+              {config.label}
+            </span>
+            
+            <span className={cn(
+              "flex items-center text-[10px] font-bold border border-black px-1.5 py-0.5",
+               isSelected ? "bg-white text-black border-white" : "bg-white text-black"
+            )}>
+              <Clock className="w-3 h-3 mr-1" strokeWidth={3} />
+              {task.durationMinutes}m
+            </span>
+            
+            {isScheduled && (
+               <span className={cn(
+                 "text-[10px] font-bold border border-black px-1.5 py-0.5 bg-[#E0E7FF] text-black",
+                 isSelected ? "border-white" : ""
+               )}>
+                 SCHEDULED
+               </span>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex flex-col items-end gap-1 ml-1">
+      {/* Actions Row */}
+      <div className={cn(
+          "flex justify-end gap-2 mt-3 pt-2 border-t-2 border-dashed",
+          isSelected ? "border-white/30" : "border-black/20"
+      )}>
         {!task.completed && (
            <button 
             onClick={() => onSelectForSchedule(task)}
-            title="Add to daily schedule"
             className={cn(
-              "flex items-center gap-1.5 px-2 py-1.5 rounded transition-all shadow-sm border",
+              "flex items-center gap-1 px-2 py-1 border-2 border-black text-[10px] font-bold uppercase transition-all active:translate-y-0.5 active:shadow-none",
               isSelected 
-                ? "bg-indigo-600 text-white border-indigo-600" 
-                : "bg-white text-slate-600 border-slate-200 hover:border-indigo-300 hover:text-indigo-600 hover:bg-indigo-50"
+                ? "bg-white text-black border-white" 
+                : "bg-white text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-50"
             )}
           >
-            <CalendarPlus className="w-3.5 h-3.5" />
-            <span className="text-[10px] font-semibold whitespace-nowrap">
-                {isSelected ? 'Selecting...' : 'Schedule'}
-            </span>
+            <CalendarPlus className="w-3.5 h-3.5" strokeWidth={2.5} />
+            {isSelected ? 'PICK TIME' : 'SCHEDULE'}
           </button>
         )}
         <button 
           onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
-          className="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
-          title="Delete task"
+          className={cn(
+            "p-1 border-2 border-black transition-all active:translate-y-0.5 active:shadow-none",
+            "bg-[#FF9AA2] text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-[#ff808a]",
+            isSelected && "border-white"
+          )}
+          title="Delete"
         >
-          <Trash2 className="w-3.5 h-3.5" />
+          <Trash2 className="w-3.5 h-3.5" strokeWidth={2.5} />
         </button>
       </div>
     </div>
