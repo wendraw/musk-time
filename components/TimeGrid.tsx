@@ -1,8 +1,8 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { TimeBlock, Task } from '../types';
 import { TIME_SLOTS, TIME_SLOT_INTERVAL, QUADRANT_CONFIG } from '../constants';
 import { isPastTime, cn, formatDate } from '../utils';
-import { Lock, X, Plus, Clock } from 'lucide-react';
+import { Lock, X, Plus, Clock, ArrowDown } from 'lucide-react';
 
 interface TimeGridProps {
   date: string; // YYYY-MM-DD
@@ -11,6 +11,7 @@ interface TimeGridProps {
   activeTaskId: string | null;
   onSlotClick: (time: string) => void;
   onDeleteBlock: (blockId: string) => void;
+  onTaskDrop: (taskId: string, time: string) => void;
 }
 
 const TimeGrid: React.FC<TimeGridProps> = ({ 
@@ -19,9 +20,11 @@ const TimeGrid: React.FC<TimeGridProps> = ({
   tasks, 
   activeTaskId, 
   onSlotClick,
-  onDeleteBlock
+  onDeleteBlock,
+  onTaskDrop
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -57,6 +60,38 @@ const TimeGrid: React.FC<TimeGridProps> = ({
     }
   });
 
+  const handleDragOver = (e: React.DragEvent, time: string) => {
+    e.preventDefault(); // Necessary to allow dropping
+  };
+
+  const handleDragEnter = (e: React.DragEvent, time: string, isPast: boolean, blockExists: boolean) => {
+    e.preventDefault();
+    if (!isPast && !blockExists) {
+      setDragOverSlot(time);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Prevent flickering: Only clear state if we are actually leaving the container,
+    // not just entering a child element.
+    if (e.currentTarget.contains(e.relatedTarget as Node)) {
+      return;
+    }
+    setDragOverSlot(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, time: string, isPast: boolean, blockExists: boolean) => {
+    e.preventDefault();
+    setDragOverSlot(null);
+    if (isPast || blockExists) return;
+
+    const taskId = e.dataTransfer.getData('taskId');
+    if (taskId) {
+      onTaskDrop(taskId, time);
+    }
+  };
+
   return (
     <div className={cn(
         "relative flex flex-col h-full bg-white border-2 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden transition-all duration-300",
@@ -79,6 +114,7 @@ const TimeGrid: React.FC<TimeGridProps> = ({
             const block = getBlockAt(time);
             const task = block ? tasks.find(t => t.id === block.taskId) : null;
             const isPast = isPastTime(date, time);
+            const isDragOver = dragOverSlot === time;
             
             let heightStyle = {};
             if (block) {
@@ -105,7 +141,9 @@ const TimeGrid: React.FC<TimeGridProps> = ({
                   className={cn(
                     "flex-1 relative transition-colors duration-200",
                     !block && activeTaskId && !isPast && "cursor-pointer hover:bg-black/10",
-                    isPast && !block && "opacity-50"
+                    isPast && !block && "opacity-50",
+                    // Use a subtle background if dragging over, but the main visual is the overlay below
+                    isDragOver && "bg-gray-50"
                   )}
                   style={isPast && !block ? {
                       backgroundImage: "repeating-linear-gradient(45deg, #e5e7eb 0px, #e5e7eb 10px, #ffffff 10px, #ffffff 20px)"
@@ -115,12 +153,27 @@ const TimeGrid: React.FC<TimeGridProps> = ({
                         onSlotClick(time);
                     }
                   }}
+                  onDragOver={(e) => handleDragOver(e, time)}
+                  onDragEnter={(e) => handleDragEnter(e, time, isPast, !!block)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, time, isPast, !!block)}
                 >
                   {/* Selection Hover */}
                   {!block && activeTaskId && !isPast && (
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-[#85E3FF]/20">
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-[#85E3FF]/20 pointer-events-none">
                           <Plus className="w-6 h-6 text-black" strokeWidth={3} />
                       </div>
+                  )}
+
+                  {/* Drag Over Visual Cue */}
+                  {isDragOver && (
+                     <div className="absolute inset-0 z-30 pointer-events-none flex items-center justify-center">
+                        <div className="absolute inset-0 border-4 border-black bg-black/5" />
+                        <div className="relative bg-black text-white px-3 py-1 font-black text-xs uppercase shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] flex items-center gap-1">
+                             <ArrowDown className="w-4 h-4 animate-bounce" strokeWidth={4} />
+                             Drop Here
+                        </div>
+                     </div>
                   )}
 
                   {/* Past Indicator Icon */}
@@ -135,7 +188,7 @@ const TimeGrid: React.FC<TimeGridProps> = ({
                     <div 
                         style={heightStyle}
                         className={cn(
-                            "absolute top-0 left-0 right-0 m-1 p-2 flex flex-col border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden transition-transform",
+                            "absolute top-0 left-0 right-0 m-1 p-2 flex flex-col border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] overflow-hidden transition-transform animate-in fade-in zoom-in-95 duration-200",
                             QUADRANT_CONFIG[task.quadrant].color,
                             isPast && "opacity-80 grayscale-[0.3]"
                         )}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Task, EisenhowerQuadrant } from '../types';
 import { QUADRANT_CONFIG } from '../constants';
 import { Check, Clock, Trash2, CalendarPlus, Square, X } from 'lucide-react';
@@ -22,15 +22,45 @@ const TaskCard: React.FC<TaskCardProps> = ({
   isScheduled
 }) => {
   const config = QUADRANT_CONFIG[task.quadrant];
+  const [isDragging, setIsDragging] = useState(false);
+
+  const isDraggable = !task.completed && !isScheduled;
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!isDraggable) {
+      e.preventDefault();
+      return;
+    }
+    
+    e.dataTransfer.setData('taskId', task.id);
+    e.dataTransfer.effectAllowed = 'copyMove';
+    
+    // Delay adding the opacity class so the browser generates a full-opacity drag image (ghost)
+    // before making the source element transparent.
+    setTimeout(() => setIsDragging(true), 0);
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
 
   return (
     <div 
+      draggable={isDraggable}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       className={cn(
         "group relative flex flex-col p-3 mb-3 border-2 border-black transition-all duration-100",
         isSelected 
           ? "bg-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] translate-x-[2px] translate-y-[2px]" 
-          : "bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]",
-        task.completed && "opacity-60 bg-gray-100"
+          : cn("bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]", 
+               // Hover effects only if interactive
+               isDraggable && "hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:-rotate-1 cursor-grab active:cursor-grabbing"),
+        task.completed && "opacity-60 bg-gray-100 cursor-default",
+        isScheduled && !task.completed && "opacity-90 bg-gray-50", // Slightly dimmed if scheduled
+        isDragging && "opacity-30 grayscale border-dashed", // Visual cue for source during drag
+        !isSelected && !task.completed && config.color,
+        !isDraggable && !task.completed && "cursor-not-allowed"
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -61,7 +91,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
               "text-[10px] font-black uppercase px-1.5 py-0.5 border border-black",
               config.color,
               // If card is black (selected), ensure tag has white border to pop
-              isSelected ? "border-white" : ""
+              isSelected ? "border-white" : "",
+              // If card is colored (bg), make tag white to pop
+              !isSelected && !task.completed && "bg-white"
             )}>
               {config.label}
             </span>
@@ -91,7 +123,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           "flex justify-end gap-2 mt-3 pt-2 border-t-2 border-dashed",
           isSelected ? "border-white/30" : "border-black/20"
       )}>
-        {!task.completed && (
+        {!task.completed && !isScheduled && (
            <button 
             onClick={() => onSelectForSchedule(task)}
             className={cn(

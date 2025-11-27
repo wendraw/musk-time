@@ -16,12 +16,10 @@ import {
   ChevronLeft, 
   ChevronRight, 
   Plus, 
-  Layout, 
+  Box,
   ListTodo,
-  RotateCcw,
-  Box
+  RotateCcw
 } from 'lucide-react';
-import { cn } from './utils';
 
 const App: React.FC = () => {
   // --- State ---
@@ -102,6 +100,11 @@ const App: React.FC = () => {
   };
 
   const startScheduling = (task: Task) => {
+    // If task is already scheduled for today, maybe just scroll to it?
+    // For now we allow re-selecting to move it, but user requested no duplicates.
+    // If we click "Schedule" on a scheduled task, let's just allow the mode switch 
+    // but handle the duplicate check in the actual slot click.
+    
     if (schedulingState.activeTaskId === task.id) {
       setSchedulingState({ activeTaskId: null, mode: 'idle' });
     } else {
@@ -116,6 +119,16 @@ const App: React.FC = () => {
 
       const dateStr = formatDate(currentDate);
       
+      // Check for duplicates
+      const isAlreadyScheduled = blocks.some(b => b.taskId === task.id && b.date === dateStr);
+      if (isAlreadyScheduled) {
+        // Optionally alert user or just reset state. 
+        // For a cleaner UI, we just cancel the action silently or could shake UI.
+        // We'll just reset the state to indicate "action failed/completed"
+        setSchedulingState({ activeTaskId: null, mode: 'idle' });
+        return;
+      }
+      
       const newBlock: TimeBlock = {
         id: uuidv4(),
         taskId: task.id,
@@ -127,6 +140,29 @@ const App: React.FC = () => {
       setBlocks(prev => [...prev, newBlock]);
       setSchedulingState({ activeTaskId: null, mode: 'idle' }); 
     }
+  };
+
+  const handleTaskDrop = (taskId: string, time: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const dateStr = formatDate(currentDate);
+    
+    // Check for duplicates
+    const isAlreadyScheduled = blocks.some(b => b.taskId === taskId && b.date === dateStr);
+    if (isAlreadyScheduled) {
+      return;
+    }
+    
+    const newBlock: TimeBlock = {
+      id: uuidv4(),
+      taskId: task.id,
+      startTime: time,
+      date: dateStr,
+      durationMinutes: task.durationMinutes
+    };
+
+    setBlocks(prev => [...prev, newBlock]);
   };
 
   const deleteBlock = (blockId: string) => {
@@ -314,6 +350,7 @@ const App: React.FC = () => {
                   activeTaskId={schedulingState.activeTaskId}
                   onSlotClick={handleSlotClick}
                   onDeleteBlock={deleteBlock}
+                  onTaskDrop={handleTaskDrop}
               />
           </div>
         </div>
