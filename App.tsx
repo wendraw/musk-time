@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db, migrateFromLocalStorage } from './db';
 import { 
   Task, 
   TimeBlock, 
@@ -24,8 +26,10 @@ import {
 const App: React.FC = () => {
   // --- State ---
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [blocks, setBlocks] = useState<TimeBlock[]>([]);
+  
+  // Data State - Now derived from DB queries
+  const tasks = useLiveQuery(() => db.tasks.toArray(), []) || [];
+  const blocks = useLiveQuery(() => db.blocks.toArray(), []) || [];
   
   // New Task Input State
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -38,18 +42,10 @@ const App: React.FC = () => {
     mode: 'idle'
   });
 
-  // --- Persistence ---
+  // --- Initialization & Migration ---
   useEffect(() => {
-    const storedTasks = localStorage.getItem('musktime_tasks');
-    const storedBlocks = localStorage.getItem('musktime_blocks');
-    if (storedTasks) setTasks(JSON.parse(storedTasks));
-    if (storedBlocks) setBlocks(JSON.parse(storedBlocks));
+    migrateFromLocalStorage();
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem('musktime_tasks', JSON.stringify(tasks));
-    localStorage.setItem('musktime_blocks', JSON.stringify(blocks));
-  }, [tasks, blocks]);
 
   // --- Handlers ---
   const handleDateChange = (days: number) => {
@@ -62,7 +58,7 @@ const App: React.FC = () => {
     setCurrentDate(new Date());
   };
 
-  const addTask = (e: React.SyntheticEvent) => {
+  const addTask = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!newTaskTitle.trim()) return;
 
@@ -75,7 +71,7 @@ const App: React.FC = () => {
       createdAt: Date.now()
     };
 
-    setTasks(prev => [task, ...prev]);
+    await db.tasks.add(task);
     setNewTaskTitle('');
     setNewTaskDuration(30);
   };
@@ -87,24 +83,26 @@ const App: React.FC = () => {
     }
   };
 
-  const toggleTaskComplete = (id: string) => {
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+  const toggleTaskComplete = async (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+        await db.tasks.update(id, { completed: !task.completed });
+    }
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
-    setBlocks(prev => prev.filter(b => b.taskId !== id));
+  const deleteTask = async (id: string) => {
+    // Transactional delete: remove task AND its associated blocks
+    await db.transaction('rw', db.tasks, db.blocks, async () => {
+        await db.blocks.where('taskId').equals(id).delete();
+        await db.tasks.delete(id);
+    });
+
     if (schedulingState.activeTaskId === id) {
       setSchedulingState({ activeTaskId: null, mode: 'idle' });
     }
   };
 
   const startScheduling = (task: Task) => {
-    // If task is already scheduled for today, maybe just scroll to it?
-    // For now we allow re-selecting to move it, but user requested no duplicates.
-    // If we click "Schedule" on a scheduled task, let's just allow the mode switch 
-    // but handle the duplicate check in the actual slot click.
-    
     if (schedulingState.activeTaskId === task.id) {
       setSchedulingState({ activeTaskId: null, mode: 'idle' });
     } else {
@@ -112,7 +110,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleSlotClick = (time: string) => {
+  const handleSlotClick = async (time: string) => {
     if (schedulingState.mode === 'selecting_slot' && schedulingState.activeTaskId) {
       const task = tasks.find(t => t.id === schedulingState.activeTaskId);
       if (!task) return;
@@ -122,9 +120,6 @@ const App: React.FC = () => {
       // Check for duplicates
       const isAlreadyScheduled = blocks.some(b => b.taskId === task.id && b.date === dateStr);
       if (isAlreadyScheduled) {
-        // Optionally alert user or just reset state. 
-        // For a cleaner UI, we just cancel the action silently or could shake UI.
-        // We'll just reset the state to indicate "action failed/completed"
         setSchedulingState({ activeTaskId: null, mode: 'idle' });
         return;
       }
@@ -137,12 +132,12 @@ const App: React.FC = () => {
         durationMinutes: task.durationMinutes
       };
 
-      setBlocks(prev => [...prev, newBlock]);
+      await db.blocks.add(newBlock);
       setSchedulingState({ activeTaskId: null, mode: 'idle' }); 
     }
   };
 
-  const handleTaskDrop = (taskId: string, time: string) => {
+  const handleTaskDrop = async (taskId: string, time: string) => {
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
 
@@ -162,11 +157,11 @@ const App: React.FC = () => {
       durationMinutes: task.durationMinutes
     };
 
-    setBlocks(prev => [...prev, newBlock]);
+    await db.blocks.add(newBlock);
   };
 
-  const deleteBlock = (blockId: string) => {
-    setBlocks(prev => prev.filter(b => b.id !== blockId));
+  const deleteBlock = async (blockId: string) => {
+    await db.blocks.delete(blockId);
   };
 
   // --- Computed Data ---
