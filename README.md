@@ -1,20 +1,44 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# MuskTime - 马斯克时间盒 (Voxel Edition) 🧊
 
-# Run and deploy your AI Studio app
+> **掌控时间，而非被时间掌控。**
+> 
+> 一个融合了埃隆·马斯克（Elon Musk）"时间盒"（Timeboxing）理念与艾森豪威尔矩阵的高效能时间管理工具。
 
-This contains everything you need to run your app locally.
+## 📖 产品理念
 
-View your app in AI Studio: https://ai.studio/apps/drive/1kyUi0evn6aEWG1rbWynZqNEjSaW5OX39
+**MuskTime** 不仅仅是一个待办清单，它是一套强制执行的**时间管理系统**。
 
-## Run Locally
+很多时候，我们列了很长的 To-Do List，却依然感觉效率低下，因为任务没有被赋予"时间的维度"。**时间盒（Timeboxing）** 的核心在于：**未被安排具体时间段的任务，往往永远不会被完成。**
 
-**Prerequisites:**  Node.js
+本应用通过**可视化的方块（Voxel）**，将抽象的时间转化为可触摸、可分配的实体，帮助你进入心流状态，极致专注。
 
+## 🚀 核心方法论
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### 1. 艾森豪威尔矩阵 (Eisenhower Matrix)
+在开始工作前，必须对任务进行残酷的分类。我们内置了四象限选择器，强制你思考任务的本质：
+- **DO FIRST (立刻做)**: 红色警报。重要且紧急，必须优先处理。
+- **SCHEDULE (计划做)**: 蓝色区域。重要但不紧急，这是高效能人士的"黄金时间"。
+- **DELEGATE (授权)**: 绿色区域。紧急但不重要，尝试交给别人或快速处理。
+- **ELIMINATE (删除)**: 灰色区域。既不紧急也不重要，学会对琐事说"不"。
+
+### 2. 时间盒 (Timeboxing)
+将任务从清单中**拖拽**进右侧的时间轴。
+- **锁定时间**: 一旦分配，这段时间就只属于这个任务。
+- **拒绝帕金森定律**: 给任务设定明确的截止时间（15/30/60分钟），防止任务无限膨胀占满所有时间。
+- **可视化**: 就像搭积木一样安排你的一天，直观地看到剩余的可用精力。
+
+## ✨ 产品特性
+
+- **极简 Voxel 视觉风格**: 采用 **Neo-Brutalist（新野兽派）** 设计语言。粗线条边框、高对比度配色、硬朗的投影。没有多余的装饰，只有清晰的边界，让你专注于内容本身。
+- **物理感交互**: 任务卡片如同实体贴纸，支持从待办池直接**拖拽**到时间格，伴随令人愉悦的吸附效果。
+- **沉浸式输入**: 支持 `Shift + Enter` 换行的大尺寸输入框，捕捉每一个稍纵即逝的想法。
+- **严谨的时间观**: 
+  - **逝去不可追**: 过去的时间块会被打上斜纹阴影并锁定，提醒你时间一去不复返。
+  - **聚焦当下**: 每日视图自动滚动到当前时间，让你始终关注"现在"。
+- **隐私优先 (Local-First)**: 所有数据存储在你的浏览器本地数据库 (IndexedDB) 中，没有任何云端上传，彻底保障隐私安全。
+
+## 💡 使用指南
+
+1.  **脑暴 (Capture)**: 早上第一件事，将脑海中所有杂乱的想法输入到左侧的 Inbox 中。
+2.  **分类 (Prioritize)**: 为每个任务打上标签（DO FIRST, SCHEDULE...）。
+3.  **装箱 (Timebox)**: 将任务**拖入**右侧的时间轴，或者点击任务并选择 `PICK TIME`。

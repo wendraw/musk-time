@@ -1,20 +1,21 @@
 import Dexie, { Table } from 'dexie';
 import { Task, TimeBlock } from './types';
 
-// Using interface + instance pattern to fix TypeScript inheritance issues
-export interface MuskTimeDB extends Dexie {
-  tasks: Table<Task>;
-  blocks: Table<TimeBlock>;
+// Using class-based inheritance to properly inherit Dexie methods like transaction() and version()
+export class MuskTimeDB extends Dexie {
+  tasks!: Table<Task>;
+  blocks!: Table<TimeBlock>;
+
+  constructor() {
+    super('MuskTimeDB');
+    this.version(1).stores({
+      tasks: 'id, quadrant, completed, createdAt', // Indexable fields
+      blocks: 'id, taskId, date, startTime'
+    });
+  }
 }
 
-const db = new Dexie('MuskTimeDB') as MuskTimeDB;
-
-db.version(1).stores({
-  tasks: 'id, quadrant, completed, createdAt', // Indexable fields
-  blocks: 'id, taskId, date, startTime'
-});
-
-export { db };
+export const db = new MuskTimeDB();
 
 // Migration Helper
 export const migrateFromLocalStorage = async () => {

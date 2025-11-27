@@ -4,14 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MuskTime - Voxel Edition</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+          },
+        },
+      }
+    </script>
     <style>
       body {
         font-family: 'Inter', sans-serif;
         background-color: #F3F4F6;
       }
-      /* Hide scrollbar for clean UI in panels */
+
+      /* Utilities */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
@@ -19,7 +31,7 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
-      
+
       /* Brutalist Scrollbar */
       ::-webkit-scrollbar {
         width: 12px;
@@ -40,20 +52,23 @@
   <script type="importmap">
 {
   "imports": {
-    "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "uuid": "https://aistudiocdn.com/uuid@^13.0.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
     "tailwind-merge": "https://aistudiocdn.com/tailwind-merge@^3.4.0",
-    "dexie": "https://aistudiocdn.com/dexie@^4.0.1",
-    "dexie-react-hooks": "https://aistudiocdn.com/dexie-react-hooks@^1.1.7"
+    "clsx": "https://aistudiocdn.com/clsx@^2.1.1",
+    "uuid": "https://aistudiocdn.com/uuid@^13.0.0",
+    "dexie": "https://aistudiocdn.com/dexie@^4.2.1",
+    "dexie-react-hooks": "https://aistudiocdn.com/dexie-react-hooks@^4.2.0"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>
